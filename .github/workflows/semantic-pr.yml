@@ -30,5 +30,6 @@ jobs:
         requireScope: false
         wip: true
         validateSingleCommit: true
+        ignoreLabels: no-pr-check
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
