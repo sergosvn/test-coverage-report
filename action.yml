@@ -1,5 +1,5 @@
-name: Tests Coverage Report
-description: Comments tests coverage report
+name: Simple Test Coverage Stats
+description: Comments test coverage stats
 branding:
   icon: archive
   color: purple
