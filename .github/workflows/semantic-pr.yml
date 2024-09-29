@@ -6,6 +6,9 @@ concurrency:
   cancel-in-progress: true
 on:
   pull_request: null
+permissions:
+  pull-requests: read
+  statuses: write
 jobs:
   semantic-pr:
     runs-on: ubuntu-20.04
