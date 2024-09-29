@@ -2,7 +2,7 @@
 
 ## About
 
-Github Action for coverage report stats as a comment
+Github Action for coverage report stats as a comment.
 
 * [Usage](#usage)
 
