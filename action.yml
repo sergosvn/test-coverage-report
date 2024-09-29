@@ -1,0 +1,31 @@
+name: Tests Coverage Report
+description: Comments tests coverage report
+branding:
+  icon: archive
+  color: purple
+
+inputs:
+  github-token:
+    description: GitHub API Access Token
+    default: ${{ github.token }}
+    required: true
+  title:
+    description: Title for the comment
+    default: Tests Report
+    required: false
+  clover-path:
+    description: The location of the clover coverage xml file
+    default: ./coverage/clover.xml
+    required: false
+  override-comment:
+    description: Overrides existing coverage comment
+    default: 'true'
+    required: false
+
+outputs:
+  coverage:
+    description: Value indicating the coverage percentage of your report based on Phpunit
+
+runs:
+  using: node16
+  main: dist/index.js
