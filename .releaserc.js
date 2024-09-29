@@ -52,5 +52,5 @@ module.exports = {
       ],
     ],
     tagFormat: '${version}',
-    branches: [{ name: 'master' }],
+    branches: [{ name: 'main' }],
   };
