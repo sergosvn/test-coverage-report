@@ -20,23 +20,24 @@ export const main = async (): Promise<void> => {
   }
 };
 
-async function calculatePercentageAll(arr: ReportFile[]): Promise<ReportFile[]> {
-  const promises = arr.map(reportFile => calculatePercentage(reportFile));
+const calculatePercentageAll = async (arr: ReportFile[]): Promise<ReportFile[]> => {
+  const promises = arr.map((reportFile: ReportFile) => calculatePercentage(reportFile));
 
   return Promise.all(promises);
-}
+};
 
-async function calculatePercentage(reportFile: ReportFile): Promise<ReportFile> {
+const calculatePercentage = async (reportFile: ReportFile): Promise<ReportFile> => {
   reportFile.percentage = await calculateCoverage(reportFile.path);
 
   return reportFile;
-}
+};
 
 const findFiles = (pathName: string): ReportFile[] => {
-  const regexPattern = /(?<serviceName>[a-z]+[-[a-z]+]?)-(?<testType>behat|phpunit)-coverage\.xml/;
-  var result: ReportFile[] = [];
+  const regexPattern =
+    /(?<serviceName>[a-z]+[-[a-z]+]?)-(?<testType>behat|phpunit)-coverage\.xml/;
+  const result: ReportFile[] = [];
   fs.readdirSync(pathName).forEach((file): void => {
-    var matches = regexPattern.exec(file);
+    const matches = regexPattern.exec(file);
     if (!matches) {
       return;
     }
@@ -49,4 +50,4 @@ const findFiles = (pathName: string): ReportFile[] => {
   });
 
   return result;
-}
+};

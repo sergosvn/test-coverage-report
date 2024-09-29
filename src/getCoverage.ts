@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as xml2js from "xml2js";
+import * as fs from 'fs';
+import * as xml2js from 'xml2js';
 
 // Function to calculate coverage from clover.xml
 export const calculateCoverage = async (cloverFile: string): Promise<number> => {
@@ -27,4 +27,4 @@ export const calculateCoverage = async (cloverFile: string): Promise<number> => 
   }
 
   return (coveredStatements / totalStatements) * 100;
-}
+};

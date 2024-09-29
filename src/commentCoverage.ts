@@ -55,10 +55,7 @@ export const commentCoverage = async (
   }
 };
 
-export const buildBody = (
-  eventInfo: EventInfo,
-  reportFiles: ReportFile[],
-): string => {
+export const buildBody = (eventInfo: EventInfo, reportFiles: ReportFile[]): string => {
   let body = `${eventInfo.commentId}\n`;
   body += `## ${eventInfo.commentTitle} :page_facing_up:\n`;
   body += buildTestsStats(reportFiles);
@@ -66,18 +63,14 @@ export const buildBody = (
 };
 
 const buildTestsStats = (reportFiles: ReportFile[]) => {
-  let markdown =
-    '| ------------------ | ----------------- |\n';
-  reportFiles.map(reportFile => {
+  let markdown = '| ------------------ | ----------------- |\n';
+  reportFiles.map((reportFile: ReportFile) => {
     const percentage = reportFile?.percentage ?? 0;
-    const printablePercentage = percentage > 0
-      ? Math.round((percentage + Number.EPSILON) * 100) / 100
-      : 'N/A';
-    markdown +=
-      `| ${reportFile.path} | ${printablePercentage} |\n`;
-    markdown +=
-      `| ------------------ | ----------------- |`;
-  })
+    const printablePercentage =
+      percentage > 0 ? Math.round((percentage + Number.EPSILON) * 100) / 100 : 'N/A';
+    markdown += `| ${reportFile.path} | ${printablePercentage} |\n`;
+    markdown += `| ------------------ | ----------------- |`;
+  });
 
   return `${markdown}\n`;
 };
