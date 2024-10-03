@@ -27,5 +27,5 @@ outputs:
     description: Value indicating the coverage percentage of your report based on Phpunit
 
 runs:
-  using: node16
+  using: node20
   main: dist/index.js
