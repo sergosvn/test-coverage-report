@@ -9,7 +9,7 @@ export const getEventInfo = (): EventInfo => {
     owner: context.repo.owner,
     repo: context.repo.repo,
     cloverPath: core.getInput('clover-path', { required: true }),
-    overrideComment: core.getBooleanInput('override-comment', { required: false }),
+    overrideComment: true,
     commentId: '<!-- tests-coverage-report -->',
     commitSha: '',
     headRef: '',
