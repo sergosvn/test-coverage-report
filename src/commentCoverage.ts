@@ -66,7 +66,7 @@ export const buildTestsStats = (reportFiles: ReportFile[]): string => {
   return reportFiles.length ? markdownTable(reportFiles) : '';
 };
 
-const markdownTable = (reportFiles: ReportFile[]): string => {
+export const markdownTable = (reportFiles: ReportFile[]): string => {
   let markdown = markdownTableRow('File', 'Coverage');
   markdown += markdownTableRow(':---', '---:');
   reportFiles.map((reportFile: ReportFile) => {
@@ -79,6 +79,6 @@ const markdownTable = (reportFiles: ReportFile[]): string => {
   return markdown;
 };
 
-const markdownTableRow = (...values: (string | number)[]): string => {
+export const markdownTableRow = (...values: (string | number)[]): string => {
   return `| ${values.join(' | ')} |\n`;
 };

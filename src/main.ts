@@ -1,4 +1,4 @@
-import { EventInfo, ReportFile } from './types';
+import { ReportFile } from './types';
 import { buildBody, commentCoverage } from './commentCoverage';
 import * as core from '@actions/core';
 import * as fs from 'fs';
@@ -6,18 +6,20 @@ import * as path from 'path';
 import { calculateCoverage } from './getCoverage';
 import { getEventInfo } from './eventInfo';
 
-export const main = async (): Promise<void> => {
+export const main = async (): Promise<ReportFile[]> => {
   try {
-    const eventInfo: EventInfo = getEventInfo();
-    const files = findFiles(eventInfo.cloverPath);
+    const eventInfo = getEventInfo();
 
-    const calculatedFiles = await calculatePercentageAll(files);
-    const commentBody = buildBody(eventInfo, calculatedFiles);
+    const calculatedFiles = await calculatePercentageAll(findFiles(eventInfo.cloverPath));
 
-    await commentCoverage(eventInfo, commentBody);
+    await commentCoverage(eventInfo, buildBody(eventInfo, calculatedFiles));
+
+    return calculatedFiles;
   } catch (error) {
     core.setFailed(error.message);
   }
+
+  return [];
 };
 
 const calculatePercentageAll = async (arr: ReportFile[]): Promise<ReportFile[]> => {

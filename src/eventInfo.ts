@@ -6,9 +6,9 @@ export const getEventInfo = (): EventInfo => {
   const eventInfo: EventInfo = {
     token: core.getInput('github-token', { required: true }),
     commentTitle: core.getInput('title', { required: false }),
+    cloverPath: core.getInput('clover-path', { required: true }),
     owner: context.repo.owner,
     repo: context.repo.repo,
-    cloverPath: core.getInput('clover-path', { required: true }),
     overrideComment: true,
     commentId: '<!-- tests-coverage-report -->',
     commitSha: '',

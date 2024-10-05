@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest --silent",
     "prebuild": "npm run lint",
-    "build": "tsc",
+    "build": "ncc build -m src/index.ts",
     "prepackage": "npm run build",
     "package": "./node_modules/.bin/ncc build dist/src/index.js --license licenses",
     "postpackage": "npm run precommit:fix:mixed-line-ending ; npm run precommit:fix:end-of-file ; npm run precommit:fix:trailing-whitespace",
