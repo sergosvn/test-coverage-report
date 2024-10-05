@@ -62,15 +62,23 @@ export const buildBody = (eventInfo: EventInfo, reportFiles: ReportFile[]): stri
   return body;
 };
 
-const buildTestsStats = (reportFiles: ReportFile[]) => {
-  let markdown = '| ------------------ | ----------------- |\n';
+export const buildTestsStats = (reportFiles: ReportFile[]): string => {
+  return reportFiles.length ? markdownTable(reportFiles) : '';
+};
+
+const markdownTable = (reportFiles: ReportFile[]): string => {
+  let markdown = markdownTableRow('File', 'Coverage');
+  markdown += markdownTableRow(':---', '---:');
   reportFiles.map((reportFile: ReportFile) => {
-    const percentage = reportFile?.percentage ?? 0;
-    const printablePercentage =
-      percentage > 0 ? Math.round((percentage + Number.EPSILON) * 100) / 100 : 'N/A';
-    markdown += `| ${reportFile.path} | ${printablePercentage} |\n`;
-    markdown += `| ------------------ | ----------------- |`;
+    const printablePercentage = reportFile?.percentage
+      ? `${Math.round((reportFile?.percentage + Number.EPSILON) * 100) / 100}%`
+      : 'N/A';
+    markdown += markdownTableRow(reportFile.path, printablePercentage);
   });
 
-  return `${markdown}\n`;
+  return markdown;
+};
+
+const markdownTableRow = (...values: (string | number)[]): string => {
+  return `| ${values.join(' | ')} |\n`;
 };
