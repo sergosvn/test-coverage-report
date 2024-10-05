@@ -5,6 +5,13 @@
 
   The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/sergosvn/test-coverage-report/compare/1.1.1...1.2.0) (2024-10-05)
+
+
+### Features
+
+* add test ([#13](https://github.com/sergosvn/test-coverage-report/issues/13)) ([21122d5](https://github.com/sergosvn/test-coverage-report/commit/21122d5f75ee1dcabf8271023171ea561b3403bc))
+
 ## [1.1.1](https://github.com/sergosvn/test-coverage-report/compare/1.1.0...1.1.1) (2024-10-03)
 
 
