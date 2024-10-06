@@ -14,11 +14,10 @@ export const calculateCoverage = async (cloverFile: string): Promise<number> => 
   let totalStatements = 0;
   let coveredStatements = 0;
 
-  // Traverse through the XML structure to find metrics
-  if (result && result.coverage && result.coverage.project) {
+  if (result?.coverage?.project && result.coverage.project[0]?.metrics) {
     const metrics = result.coverage.project[0].metrics[0];
-    totalStatements += parseInt(metrics.$.statements, 10);
-    coveredStatements += parseInt(metrics.$.coveredstatements, 10);
+    totalStatements += parseInt(metrics.$?.statements ?? '0', 10);
+    coveredStatements += parseInt(metrics.$?.coveredstatements ?? '0', 10);
   }
 
   // Calculate coverage percentage
