@@ -8,7 +8,7 @@ export const run = (): void => {
       if (!files.length) {
         core.info('files not found.\n');
       } else {
-        core.info(`files:\n ${files.map(file => file.path).join('\n')}\n`);
+        core.info(`files:\n ${files.map((file) => file.path).join('\n')}\n`);
       }
       core.info('success.');
     })

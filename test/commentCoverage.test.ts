@@ -1,7 +1,8 @@
+import { commentCoverage, buildBody } from '../src/commentCoverage';
 import { context, getOctokit } from '@actions/github';
-import { commentCoverage, markdownTableRow } from '../src/commentCoverage';
-import { EventInfo } from '../src/types';
+import { EventInfo, ReportFile } from '../src/types';
 
+// Mock getOctokit
 jest.mock('@actions/github', () => ({
   context: {
     eventName: '',
@@ -11,54 +12,47 @@ jest.mock('@actions/github', () => ({
 }));
 
 describe('commentCoverage', () => {
-  let mockOctokit: any;
+  const mockOctokit = {
+    rest: {
+      repos: {
+        createCommitComment: jest.fn(),
+      },
+      issues: {
+        listComments: jest.fn(),
+        updateComment: jest.fn(),
+        createComment: jest.fn(),
+      },
+    },
+  };
+
+  const eventInfo: EventInfo = {
+    token: 'test-token',
+    owner: 'test-owner',
+    repo: 'test-repo',
+    commitSha: 'abc123',
+    commentId: '<!-- test-comment -->',
+    commentTitle: 'Test Coverage Report',
+    cloverPath: '',
+    overrideComment: true,
+    headRef: '',
+    baseRef: '',
+    pwd: '',
+  };
 
   beforeEach(() => {
-    // Reset and clear mocks before each test
     jest.clearAllMocks();
-
-    // Mock octokit rest methods
-    mockOctokit = {
-      rest: {
-        repos: {
-          createCommitComment: jest.fn(),
-        },
-        issues: {
-          listComments: jest.fn(),
-          createComment: jest.fn(),
-          updateComment: jest.fn(),
-        },
-      },
-    };
-
     (getOctokit as jest.Mock).mockReturnValue(mockOctokit);
   });
 
-  it('should create a commit comment for push event', async () => {
-    // Mock the GitHub context for push event
+  it('should create a commit comment for a push event', async () => {
+    // Arrange
     context.eventName = 'push';
-    context.payload = {};
+    const body = 'Test commit comment';
 
-    const eventInfo: EventInfo = {
-      token: 'fake-token',
-      commentTitle: 'Coverage Report',
-      owner: 'test-owner',
-      repo: 'test-repo',
-      cloverPath: './coverage/clover.xml',
-      overrideComment: false,
-      commentId: '',
-      commitSha: '1234567890abcdef',
-      headRef: '',
-      baseRef: '',
-      pwd: '',
-    };
-
-    const body = 'Test coverage comment for push event';
-
-    // Call the function
+    // Act
     await commentCoverage(eventInfo, body);
 
-    // Expect the correct GitHub API call to be made
+    // Assert
     expect(mockOctokit.rest.repos.createCommitComment).toHaveBeenCalledWith({
       repo: eventInfo.repo,
       owner: eventInfo.owner,
@@ -67,79 +61,59 @@ describe('commentCoverage', () => {
     });
   });
 
-  it('should create a pull request comment when overrideComment is false', async () => {
-    // Mock the GitHub context for pull_request event
+  it('should create a new pull request comment if no comment exists', async () => {
+    // Arrange
     context.eventName = 'pull_request';
-    context.payload = {
-      pull_request: { number: 123 },
-    };
+    context.payload = { pull_request: { number: 1 } };
+    mockOctokit.rest.issues.listComments.mockResolvedValue({ data: [] });
+    const body = 'Test PR comment';
 
-    const eventInfo: EventInfo = {
-      token: 'fake-token',
-      commentTitle: 'Coverage Report',
-      owner: 'test-owner',
-      repo: 'test-repo',
-      cloverPath: './coverage/clover.xml',
-      overrideComment: false,
-      commentId: '',
-      commitSha: '',
-      headRef: '',
-      baseRef: '',
-      pwd: '',
-    };
-
-    const body = 'Test pull request coverage comment';
-
-    // Call the function
+    // Act
     await commentCoverage(eventInfo, body);
 
-    // Expect a new comment to be created
+    // Assert
     expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith({
       repo: eventInfo.repo,
       owner: eventInfo.owner,
-      issue_number: 123,
+      issue_number: 1,
       body,
     });
   });
 
-  it('should update an existing comment when overrideComment is true and comment exists', async () => {
-    // Mock the GitHub context for pull_request event
+  it('should handle missing pull_request in the payload by setting issue_number to 0', async () => {
+    // Arrange
     context.eventName = 'pull_request';
-    context.payload = {
-      pull_request: { number: 123 },
-    };
+    context.payload = {}; // No pull_request in payload
+    const body = 'Test PR comment without pull_request';
 
-    const eventInfo: EventInfo = {
-      token: 'fake-token',
-      commentTitle: 'Coverage Report',
-      owner: 'test-owner',
-      repo: 'test-repo',
-      cloverPath: './coverage/clover.xml',
-      overrideComment: true,
-      commentId: 'coverage-comment-id',
-      commitSha: '',
-      headRef: '',
-      baseRef: '',
-      pwd: '',
-    };
-
-    const body = 'Updated pull request coverage comment';
-
-    // Mock listComments to return an existing comment
-    const existingComment = {
-      id: 456,
-      body: 'coverage-comment-id existing comment',
-      user: { login: 'github-actions[bot]' },
-    };
-
-    mockOctokit.rest.issues.listComments.mockResolvedValue({
-      data: [existingComment],
-    });
-
-    // Call the function
+    // Act
     await commentCoverage(eventInfo, body);
 
-    // Expect the existing comment to be updated
+    // Assert
+    expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith({
+      repo: eventInfo.repo,
+      owner: eventInfo.owner,
+      issue_number: 0, // Should default to 0
+      body,
+    });
+  });
+
+  it('should update an existing pull request comment if it exists', async () => {
+    // Arrange
+    context.eventName = 'pull_request';
+    context.payload = { pull_request: { number: 1 } };
+    const existingComment = {
+      id: 12345,
+      user: { login: 'github-actions[bot]' },
+      body: '<!-- test-comment --> Previous comment',
+    };
+    mockOctokit.rest.issues.listComments.mockResolvedValue({ data: [existingComment] });
+    const body = 'Updated PR comment';
+
+    // Act
+    await commentCoverage(eventInfo, body);
+
+    // Assert
     expect(mockOctokit.rest.issues.updateComment).toHaveBeenCalledWith({
       repo: eventInfo.repo,
       owner: eventInfo.owner,
@@ -148,43 +122,85 @@ describe('commentCoverage', () => {
     });
   });
 
-  it('should create a new comment when overrideComment is true and no existing comment is found', async () => {
-    // Mock the GitHub context for pull_request event
+  it('should create a new pull request comment if overrideComment is false', async () => {
+    // Arrange
     context.eventName = 'pull_request';
-    context.payload = {
-      pull_request: { number: 123 },
-    };
+    context.payload = { pull_request: { number: 1 } };
+    eventInfo.overrideComment = false;
+    const body = 'New PR comment without override';
 
+    // Act
+    await commentCoverage(eventInfo, body);
+
+    // Assert
+    expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith({
+      repo: eventInfo.repo,
+      owner: eventInfo.owner,
+      issue_number: 1,
+      body,
+    });
+  });
+});
+
+describe('buildBody', () => {
+  it('should build the correct comment body with report files', () => {
+    // Arrange
     const eventInfo: EventInfo = {
-      token: 'fake-token',
+      commentId: '<!-- test-comment -->',
       commentTitle: 'Coverage Report',
-      owner: 'test-owner',
-      repo: 'test-repo',
-      cloverPath: './coverage/clover.xml',
-      overrideComment: true,
-      commentId: 'coverage-comment-id',
+      token: '',
+      cloverPath: '',
+      overrideComment: false,
+      repo: '',
+      owner: '',
       commitSha: '',
       headRef: '',
       baseRef: '',
       pwd: '',
     };
+    const reportFiles: ReportFile[] = [
+      { path: 'service1-behat-coverage.xml', percentage: 85.5 },
+      { path: 'service2-phpunit-coverage.xml', percentage: 90.12 },
+    ];
 
-    const body = 'New pull request coverage comment';
+    // Act
+    const result = buildBody(eventInfo, reportFiles);
 
-    // Mock listComments to return no matching comments
-    mockOctokit.rest.issues.listComments.mockResolvedValue({
-      data: [],
-    });
+    // Assert
+    const expectedBody =
+      `<!-- test-comment -->\n` +
+      `## Coverage Report :page_facing_up:\n` +
+      `| File | Coverage |\n` +
+      `| :--- | ---: |\n` +
+      `| service1-behat-coverage.xml | 85.5% |\n` +
+      `| service2-phpunit-coverage.xml | 90.12% |\n`;
 
-    // Call the function
-    await commentCoverage(eventInfo, body);
+    expect(result).toBe(expectedBody);
+  });
 
-    // Expect a new comment to be created
-    expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith({
-      repo: eventInfo.repo,
-      owner: eventInfo.owner,
-      issue_number: 123,
-      body,
-    });
+  it('should build the correct comment body with no report files', () => {
+    // Arrange
+    const eventInfo: EventInfo = {
+      commentId: '<!-- test-comment -->',
+      commentTitle: 'Coverage Report',
+      token: '',
+      cloverPath: '',
+      overrideComment: false,
+      repo: '',
+      owner: '',
+      commitSha: '',
+      headRef: '',
+      baseRef: '',
+      pwd: '',
+    };
+    const reportFiles: ReportFile[] = [];
+
+    // Act
+    const result = buildBody(eventInfo, reportFiles);
+
+    // Assert
+    const expectedBody = `<!-- test-comment -->\n## Coverage Report :page_facing_up:\n`;
+
+    expect(result).toBe(expectedBody);
   });
 });
