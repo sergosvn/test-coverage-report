@@ -1,5 +1,6 @@
 import { context, getOctokit } from '@actions/github';
 import { EventInfo, ReportFile } from './types';
+import { markdownTable } from './markdownTable';
 
 export const commentCoverage = async (
   eventInfo: EventInfo,
@@ -7,6 +8,15 @@ export const commentCoverage = async (
 ): Promise<void> => {
   const { eventName, payload } = context;
   const octokit = getOctokit(eventInfo.token);
+
+  const createComment = () => {
+    return octokit.rest.issues.createComment({
+      repo: eventInfo.repo,
+      owner: eventInfo.owner,
+      issue_number: payload.pull_request?.number || 0,
+      body,
+    });
+  };
 
   if (eventName === 'push') {
     await octokit.rest.repos.createCommitComment({
@@ -37,20 +47,10 @@ export const commentCoverage = async (
           body,
         });
       } else {
-        await octokit.rest.issues.createComment({
-          repo: eventInfo.repo,
-          owner: eventInfo.owner,
-          issue_number: payload.pull_request?.number || 0,
-          body,
-        });
+        await createComment();
       }
     } else {
-      await octokit.rest.issues.createComment({
-        repo: eventInfo.repo,
-        owner: eventInfo.owner,
-        issue_number: payload.pull_request?.number || 0,
-        body,
-      });
+      await createComment();
     }
   }
 };
@@ -58,27 +58,6 @@ export const commentCoverage = async (
 export const buildBody = (eventInfo: EventInfo, reportFiles: ReportFile[]): string => {
   let body = `${eventInfo.commentId}\n`;
   body += `## ${eventInfo.commentTitle} :page_facing_up:\n`;
-  body += buildTestsStats(reportFiles);
+  body += reportFiles.length ? markdownTable(reportFiles) : '';
   return body;
-};
-
-export const buildTestsStats = (reportFiles: ReportFile[]): string => {
-  return reportFiles.length ? markdownTable(reportFiles) : '';
-};
-
-const markdownTable = (reportFiles: ReportFile[]): string => {
-  let markdown = markdownTableRow('File', 'Coverage');
-  markdown += markdownTableRow(':---', '---:');
-  reportFiles.map((reportFile: ReportFile) => {
-    const printablePercentage = reportFile?.percentage
-      ? `${Math.round((reportFile?.percentage + Number.EPSILON) * 100) / 100}%`
-      : 'N/A';
-    markdown += markdownTableRow(reportFile.path, printablePercentage);
-  });
-
-  return markdown;
-};
-
-const markdownTableRow = (...values: (string | number)[]): string => {
-  return `| ${values.join(' | ')} |\n`;
 };

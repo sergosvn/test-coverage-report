@@ -1,5 +1,22 @@
 import * as fs from 'fs';
 import * as xml2js from 'xml2js';
+import { ReportFile } from './types';
+
+export const calculatePercentageAll = async (
+  arr: ReportFile[],
+): Promise<ReportFile[]> => {
+  const promises = arr.map((reportFile: ReportFile) => calculatePercentage(reportFile));
+
+  return Promise.all(promises);
+};
+
+export const calculatePercentage = async (
+  reportFile: ReportFile,
+): Promise<ReportFile> => {
+  reportFile.percentage = await calculateCoverage(reportFile.path);
+
+  return reportFile;
+};
 
 // Function to calculate coverage from clover.xml
 export const calculateCoverage = async (cloverFile: string): Promise<number> => {
@@ -14,11 +31,10 @@ export const calculateCoverage = async (cloverFile: string): Promise<number> => 
   let totalStatements = 0;
   let coveredStatements = 0;
 
-  // Traverse through the XML structure to find metrics
-  if (result && result.coverage && result.coverage.project) {
+  if (result?.coverage?.project && result.coverage.project[0]?.metrics) {
     const metrics = result.coverage.project[0].metrics[0];
-    totalStatements += parseInt(metrics.$.statements, 10);
-    coveredStatements += parseInt(metrics.$.coveredstatements, 10);
+    totalStatements += parseInt(metrics?.$?.statements ?? '0', 10);
+    coveredStatements += parseInt(metrics?.$?.coveredstatements ?? '0', 10);
   }
 
   // Calculate coverage percentage
